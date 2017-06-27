@@ -11,13 +11,10 @@ import time
 from itertools import groupby
 from operator import itemgetter
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 # import scipy
 # from pylab import tk
-from scipy.ndimage import gaussian_filter1d
-from sklearn.neighbors import NearestNeighbors
 
 import application
 import call_back_preprocessing
@@ -39,18 +36,12 @@ current_time = time.localtime()
 current_time = time.strftime('%a, %d %b %Y %H:%M:%S GMT', current_time)
 global prev_image, thre
 
-
-def drawStr(dst, target, s):
-    """ Puts text onto an image
-    :param dst: the image on which to put a string
-    :param target: a tuple designating the image coordinates of the desired text
-    :param s: the string to draw on the image
+def get_root():
+    """Return the application root.
+    Needed for methods in other packages that display on GUI
+    Replace with more efficient way in the future
     """
-    x, y = target
-    cv2.putText(dst, s, (x + 1, y + 1), cv2.FONT_HERSHEY_PLAIN,
-                1.0, (0, 0, 0), thickness=3, lineType=cv2.LINE_AA)
-    cv2.putText(dst, s, (x, y), cv2.FONT_HERSHEY_PLAIN,
-                1.0, (255, 255, 255), lineType=cv2.LINE_AA)
+    return root
 
 
 def resizeImage(image):
@@ -101,57 +92,6 @@ def deleteLostTracks(trackNr, frameIdx, currentFrameIdx):
             deleteTrack = trackNr
 
     return deleteTrack
-
-
-def displayCoordinates(self, objectLabel, a, b, tm):
-    """ Display coordinates of the cell to the panel"""
-
-    if objectLabel == 0:
-        self.label_10.configure(text=int(tm))
-        self.label_43.configure(text=a)
-        self.label_63.configure(text=b)
-    if objectLabel == 1:
-        self.label_11.configure(text=int(tm))
-        self.label_44.configure(text=a)
-        self.label_64.configure(text=b)
-
-    if objectLabel == 2:
-        self.label_12.configure(text=int(tm))
-        self.label_45.configure(text=a)
-        self.label_65.configure(text=b)
-
-    if objectLabel == 3:
-        self.label_13.configure(text=int(tm))
-        self.label_46.configure(text=a)
-        self.label_66.configure(text=b)
-
-    if objectLabel == 4:
-        self.label_14.configure(text=int(tm))
-        self.label_47.configure(text=a)
-        self.label_67.configure(text=b)
-
-    if objectLabel == 5:
-        self.label_15.configure(text=int(tm))
-        self.label_48.configure(text=a)
-        self.label_68.configure(text=b)
-    if objectLabel == 6:
-        self.label_16.configure(text=int(tm))
-        self.label_49.configure(text=a)
-        self.label_69.configure(text=b)
-    if objectLabel == 7:
-        self.label_17.configure(text=int(tm))
-        self.label_50.configure(text=a)
-        self.label_70.configure(text=b)
-
-    if objectLabel == 8:
-        self.label_18.configure(text=int(tm))
-        self.label_51.configure(text=a)
-        self.label_71.configure(text=b)
-
-    if objectLabel == 9:
-        self.label_19.configure(text=int(tm))
-        self.label_52.configure(text=a)
-        self.label_72.configure(text=b)
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
 # imports
+import cv2
+import numpy as np
 from .. import common
 
 def KCFTrack(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, updateconvax, progessbar, timelapse, tmp_dir):
@@ -8,15 +10,14 @@ def KCFTrack(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, 
     
     tracker = cv2.MultiTracker("KCF")
     init_once = False
-    old_gray = call_back_preprocessing.call_preprocessing(
-        firstImage, smoothingmethod)
-    initialpoints, boundingBox, _, _, CellInfo = call_back_segmentation.call_segmentation(segMeth, processedImage=old_gray,
-                                                                                    rawImg=firstImage,
-                                                                                    minAreaSize=exp_parameter[2],
-                                                                                    maxAreaSize=exp_parameter[3],
+    old_gray = common.call_preprocessing(firstImage, smoothingmethod)
+    initialpoints, boundingBox, _, _, CellInfo = common.call_segmentation(segMeth, preimage=old_gray,
+                                                                                    rawimage=firstImage,
+                                                                                    min_areasize=exp_parameter[2],
+                                                                                    max_areasize=exp_parameter[3],
                                                                                     fixscale=exp_parameter[4],
-                                                                                    minDistance=exp_parameter[5],
-                                                                                    cellEstimate=exp_parameter[1],
+                                                                                    min_distance=exp_parameter[5],
+                                                                                    cell_estimate=exp_parameter[1],
                                                                                           color=int(exp_parameter[6]),
                                                                                           thre=exp_parameter[7])
 
@@ -28,7 +29,7 @@ def KCFTrack(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, 
             r = 500.0 / firstImage.shape[1]
             dim = (500, int(firstImage.shape[0] * r))
 
-            firstImage = cv2.resize(firstImage, dim, interpolation=cv2.INTER_AREA)
+            firstImage = common.resize_image(firstImage, dim)
 
     noFrames = len(frames)
     masks = np.zeros_like(firstImage,)
@@ -40,10 +41,10 @@ def KCFTrack(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, 
                     r = 500.0 / image.shape[1]
                     dim = (500, int(image.shape[0] * r))
 
-                    image = cv2.resize(image, dim, interpolation=cv2.INTER_AREA)
+                    image = common.resize_image(image, dim)
 
             IM = image
-            old_gray = call_back_preprocessing.call_preprocessing(image, smoothingmethod)
+            old_gray = common.call_preprocessing(image, smoothingmethod)
             # check if its two dim or more
             if len(old_gray.shape) > 3:
                 old_gray = cv2.cvtColor(old_gray, cv2.COLOR_GRAY2BGR)
@@ -81,50 +82,48 @@ def KCFTrack(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, 
                 frameID.append(ii)
 
                 # display to the panel the location
-                displayCoordinates(self, c, cX, cY)
+                common.displaycoordinates(self, c, cX, cY)
 
             old_points2 = old_points
 
             IM = np.add(IM, masks)
 
-            tmp_img = path.join(str(tmp_dir[1]), 'frame{}.png'.format(ii))
-            save_path = path.join(str(tmp_dir[0]), 'frame{}.png'.format(ii))
-            cv2.imwrite(save_path, IM)
+            tmp_img = common.join_path(str(tmp_dir[1]), 'frame{}.png'.format(ii))
+            common.write_image(str(tmp_dir[0]), 'frame{}.png'.format(ii), IM)
 
             if ii == noFrames - 1 or ii == noFrames:
                 common.save_image(str(tmp_dir[0]), 'frame{}.png'.format(ii), IM)
 
             # handle image in the displace panel
 
-            img = cv2.imread(save_path)
+            img = common.read_image(str(tmp_dir[0]), 'frame{}.png'.format(ii))
 
             r = 600.0 / img.shape[1]
             dim = (600, int(img.shape[0] * r))
 
             # perform the actual resizing of the image and display it to the panel
-            resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+            resized = common.resize_image(img, dim)
             common.save_image(tmp_dir[3], '%d.gif' % ii, resized)
 
-            displayImage = tk.PhotoImage(file=str(path.join(tmp_dir[3], '%d.gif' % ii)))
-            root.displayImage = displayImage
-            imagesprite = updateconvax.create_image(
-                263, 187, image=displayImage)
+            displayImage = tk.PhotoImage(file=str(common.join_path(tmp_dir[3], '%d.gif' % ii)))
+            common.display_image(displayImage)
+            imagesprite = updateconvax.create_image(263, 187, image=displayImage)
             updateconvax.update_idletasks()  # Force redraw
             updateconvax.delete(imagesprite)
 
             if ii == noFrames - 1 or ii == noFrames:
-                displayImage = tk.PhotoImage(
-                    file=str(path.join(tmp_dir[3], '%d.gif' % ii)))
-                root.displayImage = displayImage
+                displayImage = tk.PhotoImage(file=str(common.join_path(tmp_dir[3], '%d.gif' % ii)))
+                common.display_image(displayImage)
                 imagesprite = updateconvax.create_image(
                     263, 187, image=displayImage)
+        
         except EOFError:
             continue
         # timelapse += Initialtime
 
     unpacked = zip(frameID, cellIDs, trajectoriesX, trajectoriesY)
-    with open(path.join(tmp_dir[2], 'data.csv'), 'wt') as f1:
-        writer = csv.writer(f1, lineterminator='\n')
+    with open(common.join_path(tmp_dir[2], 'data.csv'), 'wt') as f1:
+        writer = common.csv_writer(f1)
         writer.writerow(('frameID', 'track_no', 'x', "y",))
         for value in unpacked:
             writer.writerow(value)

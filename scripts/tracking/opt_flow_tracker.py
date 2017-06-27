@@ -1,19 +1,24 @@
 # imports
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter1d
+from sklearn.neighbors import NearestNeighbors
+
 from .. import common
 
 def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, updateconvax, progessbar, timelapse, tmp_dir):
     """
     Optical Flow-based tracker
     """
-    old_gray = call_back_preprocessing.call_preprocessing(
+    old_gray = common.call_preprocessing(
         firstImage, smoothingmethod)
-    initialpoints, boundingBox, _, _, CellInfo = call_back_segmentation.call_segmentation(segMeth, processedImage=old_gray,
-                                                                           rawImg=firstImage,
-                                                                           minAreaSize=exp_parameter[2],
-                                                                           maxAreaSize=exp_parameter[3],
+    initialpoints, boundingBox, _, _, CellInfo = common.call_segmentation(segMeth, preimage=old_gray,
+                                                                           rawimage=firstImage,
+                                                                           min_areasize=exp_parameter[2],
+                                                                           max_areasize=exp_parameter[3],
                                                                            fixscale=exp_parameter[4],
-                                                                           minDistance=exp_parameter[5],
-                                                                           cellEstimate=exp_parameter[1],
+                                                                           min_distance=exp_parameter[5],
+                                                                           cell_estimate=exp_parameter[1],
                                                                                           color=int(exp_parameter[6]),
                                                                                           thre=int(exp_parameter[7]))
 
@@ -50,8 +55,7 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
                     r = 500.0 / frame.shape[1]
                     dim = (500, int(frame.shape[0] * r))
 
-                    frame = cv2.resize(
-                        frame, dim, interpolation=cv2.INTER_AREA)
+                    frame = common.resize_image(frame, dim)
 
             # make a copy of the frame for ploting reasons
             imagePlot = frame.copy()
@@ -59,8 +63,7 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
             # show the progress bar
             progessbar.step(i * 2)
 
-            im = call_back_preprocessing.call_preprocessing(
-                frame, smoothingmethod)
+            im = common.call_preprocessing(frame, smoothingmethod)
 
             # Parameters for lucas kanade optical flow
             lk_params = dict(winSize=(20, 20), maxLevel=3,
@@ -119,19 +122,18 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
                 if CellInfo:
                     tmp_inf = CellInfo[ii]
                     tmp_inf = tmp_inf[1:]
-                    tmpList = list(extra_modules.concatenateList(
+                    tmpList = list(common.concatenate_list(
                         [i, int(cellId), tmp_inf]))
                     CellMorph.append(tmpList)
 
                 # manage the displaying label
-
-                displayCoordinates(self, ii, a, b, Initialtime)
+                common.displaycoordinates(self, ii, a, b, Initialtime)
 
             dataFrame = pd.DataFrame(track_history, columns=[
                 'frame_idx', 'track_no', 'x', 'y'])
 
             # review tracking
-            drawStr(imagePlot, (20, 20), 'track count: %d' % len(good_new))
+            common.draw_str(imagePlot, (20, 20), 'track count: %d' % len(good_new))
 
             if dataFrame is not None:
                 index_Values = dataFrame["track_no"]
@@ -183,13 +185,12 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
             plt.axis('off')
             mng = plt.get_current_fig_manager()
             mng.full_screen_toggle()
-            tmp_img = path.join(str(tmp_dir[1]), 'frame{}.png'.format(i))
 
-            fig.savefig(tmp_img)
+            fig.savefig(common.join_path(str(tmp_dir[1]), 'frame{}.png'.format(i)))
 
             if i == noFrames - 1:
                 fig.savefig(
-                    path.join(str(tmp_dir[0]), 'frame{}.png'.format(i)))
+                    common.join_path(str(tmp_dir[0]), 'frame{}.png'.format(i)))
             del fig
 
             # Now update the previous frame and previous points
@@ -197,19 +198,19 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
             initialpoints = p1.reshape(-1, 1, 2)
 
             # handle image in the displace panel
-            img = cv2.imread(tmp_img)
+            img = common.read_image(str(tmp_dir[1]), 'frame{}.png'.format(i))
 
             r = 600.0 / img.shape[1]
             dim = (600, int(img.shape[0] * r))
 
             # perform the actual resizing of the image and display it to the
             # panel
-            resized = cv2.resize(img, dim, interpolation=cv2.INTER_AREA)
+            resized = common.resize_image(img, dim)
             common.save_image(tmp_dir[3], '%d.gif' % i, resized)
 
             displayImage = tk.PhotoImage(
-                file=str(path.join(tmp_dir[3], '%d.gif' % i)))
-            root.displayImage = displayImage
+                file=str(common.join_path(tmp_dir[3], '%d.gif' % i)))
+            common.display_image(displayImage)
             imagesprite = updateconvax.create_image(
                 263, 187, image=displayImage)
             updateconvax.update_idletasks()  # Force redraw
@@ -218,8 +219,8 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
             if i == noFrames - 1:
 
                 displayImage = tk.PhotoImage(
-                    file=str(path.join(tmp_dir[3], '%d.gif' % i)))
-                root.displayImage = displayImage
+                    file=str(common.join_path(tmp_dir[3], '%d.gif' % i)))
+                common.display_image(displayImage)
                 imagesprite = updateconvax.create_image(
                     263, 187, image=displayImage)
 
@@ -228,8 +229,8 @@ def OptflowTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_param
         # timelapse += Initialtime
 
     unpacked = zip(frameID, cellIDs, trajectoriesX, trajectoriesY)
-    with open(path.join(tmp_dir[2],  'data.csv'), 'wt') as f1:
-        writer = csv.writer(f1, lineterminator='\n')
+    with open(common.join_path(tmp_dir[2],  'data.csv'), 'wt') as f1:
+        writer = common.csv_writer(f1)
         writer.writerow(('frameID', 'track_no', 'x', "y",))
         for value in unpacked:
             writer.writerow(value)

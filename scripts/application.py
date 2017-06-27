@@ -2,6 +2,7 @@ import os
 import re
 
 import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 from PIL import Image as img2
 from PIL import ImageSequence
 

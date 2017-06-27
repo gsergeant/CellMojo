@@ -1,4 +1,7 @@
 #imports
+import matplotlib.pyplot as plt
+from scipy.ndimage import gaussian_filter1d
+
 from .. import common
 
 def KNNTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter, updateconvax, progessbar, timelapse, tmp_dir):
@@ -126,17 +129,17 @@ def KNNTracker(self, frames, firstImage, smoothingmethod, segMeth, exp_parameter
                 # than 15 frames
                 if CellInfo:
                     tmp_inf = CellInfo[ii]
-                    tmpList = list(extra_modules.concatenateList([i, int(cellIdx), tmp_inf]))
+                    tmpList = list(common.concatenate_list([i, int(cellIdx), tmp_inf]))
                     CellMorph.append(tmpList)
                 # display some info to the user interface
-                displayCoordinates(self, ii, a, b, Initialtime)
+                common.displaycoordinates(self, ii, a, b, Initialtime)
 
             dataFrame = pd.DataFrame(track_history, columns=[
                 'frame_idx', 'track_no', 'x', 'y', 'time'])
 
             # review tracking
-            drawStr(imagePlot, (20, 20), 'track count: %d' % len(good_new))
-            drawStr(morphImage, (20, 20), 'track count: %d' % len(good_new))
+            common.draw_str(imagePlot, (20, 20), 'track count: %d' % len(good_new))
+            common.draw_str(morphImage, (20, 20), 'track count: %d' % len(good_new))
             if dataFrame is not None:
                 index_Values = dataFrame["track_no"]
                 x_Values = dataFrame["x"]

@@ -21,20 +21,20 @@ def morph_extraction(frames, smoothingmethod, seg_method,
         for i, frame in enumerate(frames):
             old_gray = common.call_preprocessing(frame, smoothingmethod)
             # unused: bounding_box and mask_image
-            initialpoints, _, _, displayed_image, cell_info = common.call_segmentation(seg_method, preImage=old_gray,
-                                                                                       rawImg=frame,
-                                                                                       minAreaSize=exp_parameter[2],
-                                                                                       maxAreaSize=exp_parameter[3],
+            initialpoints, _, _, displayed_image, cell_info = common.call_segmentation(seg_method, preimage=old_gray,
+                                                                                       rawimage=frame,
+                                                                                       min_areasize=exp_parameter[2],
+                                                                                       max_areasize=exp_parameter[3],
                                                                                        fixscale=exp_parameter[4],
-                                                                                       minDistance=exp_parameter[5],
-                                                                                       cellEstimate=exp_parameter[1],
+                                                                                       min_distance=exp_parameter[5],
+                                                                                       cell_estimate=exp_parameter[1],
                                                                                        color=int(exp_parameter[6]),
                                                                                        thre=int(exp_parameter[7]))
             for ii, tmp_inf in enumerate(cell_info):
 
                 if tmp_inf:
                     tmp_inf = tmp_inf[1:]
-                    temp_list = list(common.concatenateList([i, int(ii), tmp_inf]))
+                    temp_list = list(common.concatenate_list([i, int(ii), tmp_inf]))
                     cell_morphology.append(temp_list)
 
             # cell centroids
@@ -59,7 +59,7 @@ def morph_extraction(frames, smoothingmethod, seg_method,
             common.save_image(tmp_dir[3], '%d.gif' % i, resized)
 
             display_image = common.tkinter_photoimage(str(common.join_path(tmp_dir[3], '%d.gif' % i)))
-            root.displayImage = display_image
+            common.display_image(display_image)
             imagesprite = updateconvax.create_image(
                 263, 187, image=display_image)
             updateconvax.update_idletasks()  # Force redraw
@@ -67,7 +67,7 @@ def morph_extraction(frames, smoothingmethod, seg_method,
 
             if i == amount_frames - 1 or i == amount_frames:
                 display_image = common.tkinter_photoimage(str(common.join_path(tmp_dir[3], '%d.gif' % i)))
-                root.displayImage = display_image
+                common.display_image(display_image)
                 imagesprite = updateconvax.create_image(
                     263, 187, image=display_image)
 
